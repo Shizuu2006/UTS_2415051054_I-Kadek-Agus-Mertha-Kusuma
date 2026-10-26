@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../constants.dart';
 import '../providers/course_provider.dart';
+import '../providers/quote_provider.dart';
+import '../widgets/quote_section.dart';
 import '../theme.dart';
 import 'course_form_page.dart';
 import 'course_list_page.dart';
@@ -25,6 +27,7 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CourseProvider>().loadCourses();
+      context.read<QuoteProvider>().loadQuotes();
     });
   }
 
@@ -87,6 +90,7 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
     final content = Column(
       children: [
         _header(),
+        const QuoteSection(),
         Expanded(
           child: CourseListPage(filterStatus: _filters[_index], query: _query),
         ),
