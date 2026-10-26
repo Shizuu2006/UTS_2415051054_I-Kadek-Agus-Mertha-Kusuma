@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'edit_course_page.dart';
+
 import '../constants.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../theme.dart';
-import 'course_form_page.dart';
 
 class CourseDetailPage extends StatelessWidget {
   final Course course;
@@ -49,7 +50,7 @@ class CourseDetailPage extends StatelessWidget {
   Future<void> _edit(BuildContext context) async {
     final changed = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(builder: (_) => CourseFormPage(course: course)),
+      MaterialPageRoute(builder: (_) => EditCoursePage(course: course)),
     );
     if (!context.mounted) return;
     if (changed == true) Navigator.pop(context);
