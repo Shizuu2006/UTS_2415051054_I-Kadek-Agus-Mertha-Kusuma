@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'add_course_page.dart';
+
 import '../constants.dart';
 import '../providers/course_provider.dart';
 import '../providers/quote_provider.dart';
 import '../widgets/quote_section.dart';
 import '../theme.dart';
-import 'course_form_page.dart';
 import 'course_list_page.dart';
 
 class ResponsiveShell extends StatefulWidget {
@@ -57,7 +58,7 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
                     ),
                   ),
                   Text(
-                    'NIM $studentNim • MY TUGAS',
+                    'NIM $studentNim • $studentClass',
                     style: TextStyle(
                       fontSize: 12,
                       color: AppColors.navy.withValues(alpha: 0.6),
@@ -108,7 +109,7 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
             shape: const CircleBorder(),
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const CourseFormPage()),
+              MaterialPageRoute(builder: (_) => const AddCoursePage()),
             ),
             child: const Icon(Icons.add),
           ),
