@@ -6,12 +6,15 @@ import 'package:timezone/data/latest_all.dart' as tzdata;
 
 import 'constants.dart';
 import 'providers/course_provider.dart';
+import 'providers/quote_provider.dart';
+import 'repositories/quote_repository.dart';
 import 'repositories/course_repository.dart';
 import 'screens/responsive_shell.dart';
 import 'services/course_data_source.dart';
 import 'services/course_supabase_service.dart';
 import 'services/notification_service.dart';
 import 'services/calendar_service.dart';
+import 'services/quote_api_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,15 +32,23 @@ Future<void> main() async {
   final CourseDataSource dataSource = CourseSupabaseService();
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => CourseProvider(CourseRepository(dataSource), notif, cal),
-      child: const MYTUGASApp(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) =>
+              CourseProvider(CourseRepository(dataSource), notif, cal),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => QuoteProvider(QuoteRepository(QuoteApiService())),
+        ),
+      ],
+      child: const MYApp(),
     ),
   );
 }
 
-class MYTUGASApp extends StatelessWidget {
-  const MYTUGASApp({super.key});
+class MYApp extends StatelessWidget {
+  const MYApp({super.key});
 
   @override
   Widget build(BuildContext context) => MaterialApp(
