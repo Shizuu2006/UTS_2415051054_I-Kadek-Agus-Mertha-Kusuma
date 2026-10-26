@@ -3,6 +3,7 @@ enum CourseBackend { demo, api, supabase }
 const courseBackend = CourseBackend.demo;
 const studentName = 'I Kadek Agus Mertha Kusuma';
 const studentNim = '2415051054';
+const studentClass = 'PTI 5C';
 
 const courseApiBaseUrl = 'https://mytugas-api.vercel.app';
 const supabaseUrl = 'https://fwqtaffmohlxvzlryspg.supabase.co';
