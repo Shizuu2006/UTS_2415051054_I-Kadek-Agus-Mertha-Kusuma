@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../theme.dart';
 import '../widgets/course_card.dart';
 import '../widgets/error_view.dart';
-import '../widgets/highlight_card.dart';
 import 'course_detail_page.dart';
 
 class CourseListPage extends StatelessWidget {
@@ -13,7 +13,7 @@ class CourseListPage extends StatelessWidget {
   final String query;
   const CourseListPage({super.key, this.filterStatus, this.query = ''});
 
-  void _open(BuildContext context, course) => Navigator.push(
+  void _open(BuildContext context, Course course) => Navigator.push(
     context,
     MaterialPageRoute(builder: (_) => CourseDetailPage(course: course)),
   );
@@ -50,9 +50,9 @@ class CourseListPage extends StatelessWidget {
               color: AppColors.sky,
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Belum ada tugas.',
-              style: TextStyle(
+            Text(
+              p.courses.isEmpty ? 'Belum ada tugas.' : 'Tidak ada hasil.',
+              style: const TextStyle(
                 color: AppColors.navy,
                 fontWeight: FontWeight.w600,
               ),
@@ -64,62 +64,39 @@ class CourseListPage extends StatelessWidget {
       );
     }
 
-    final highlights = p.courses.where((c) => c.status != 'done').toList()
-      ..sort((a, b) => b.credits.compareTo(a.credits));
-    final showHighlights =
-        filterStatus == null && q.isEmpty && highlights.isNotEmpty;
-
     return RefreshIndicator(
       onRefresh: p.loadCourses,
-      child: ListView(
-        padding: const EdgeInsets.only(bottom: 100),
-        children: [
-          if (showHighlights) ...[
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 8, 20, 10),
-              child: Text(
-                'Prioritas Utama',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.navy,
-                ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final w = constraints.maxWidth;
+          final columns = w >= 1100 ? 3 : (w >= 640 ? 2 : 1);
+
+          if (columns == 1) {
+            return ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.only(top: 8, bottom: 100),
+              itemCount: items.length,
+              itemBuilder: (_, i) => CourseCard(
+                course: items[i],
+                onTap: () => _open(context, items[i]),
               ),
+            );
+          }
+
+          return GridView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.only(top: 8, bottom: 100),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columns,
+              mainAxisExtent: 112,
             ),
-            SizedBox(
-              height: 150,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.only(left: 20),
-                children: highlights
-                    .take(5)
-                    .map(
-                      (c) => HighlightCard(
-                        course: c,
-                        onTap: () => _open(context, c),
-                      ),
-                    )
-                    .toList(),
-              ),
+            itemCount: items.length,
+            itemBuilder: (_, i) => CourseCard(
+              course: items[i],
+              onTap: () => _open(context, items[i]),
             ),
-          ],
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-            child: Text(
-              filterStatus == null
-                  ? 'Semua Tugas (${items.length})'
-                  : '${statusLabel(filterStatus!)} (${items.length})',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: AppColors.navy,
-              ),
-            ),
-          ),
-          ...items.map(
-            (c) => CourseCard(course: c, onTap: () => _open(context, c)),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
