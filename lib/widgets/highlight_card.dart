@@ -6,88 +6,123 @@ import '../theme.dart';
 class HighlightCard extends StatelessWidget {
   final Course course;
   final VoidCallback onTap;
-  const HighlightCard({super.key, required this.course, required this.onTap});
+  final bool alt;
+  const HighlightCard({
+    super.key,
+    required this.course,
+    required this.onTap,
+    this.alt = false,
+  });
+
+  Widget _circle(double size) => Container(
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: Colors.white.withValues(alpha: 0.08),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
+    final colors = alt
+        ? [AppColors.blue, AppColors.cyan]
+        : [AppColors.navy, AppColors.blue];
+    final info = course.deadline != null
+        ? remainingText(course.deadline!)
+        : statusLabel(course.status);
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 190,
-        margin: const EdgeInsets.only(right: 14),
-        padding: const EdgeInsets.all(16),
+        width: 200,
+        margin: const EdgeInsets.only(right: 14, bottom: 8),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(26),
-          gradient: const LinearGradient(
+          borderRadius: BorderRadius.circular(28),
+          gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [AppColors.navy, AppColors.blue],
+            colors: colors,
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.blue.withValues(alpha: 0.3),
+              color: colors.first.withValues(alpha: 0.3),
               blurRadius: 14,
               offset: const Offset(0, 6),
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    statusIcon(course.status),
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    course.code,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.ice,
-                      fontWeight: FontWeight.w600,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(28),
+          child: Stack(
+            children: [
+              Positioned(right: -30, top: -30, child: _circle(120)),
+              Positioned(right: 30, bottom: -50, child: _circle(100)),
+              Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Icon(
+                            statusIcon(course.status),
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            course.code,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppColors.ice,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
+                    const Spacer(),
+                    Text(
+                      course.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.flag, size: 14, color: AppColors.ice),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            '$info • Prioritas ${course.credits}',
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppColors.ice,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            const Spacer(),
-            Text(
-              course.title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
               ),
-            ),
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                const Icon(Icons.flag, size: 14, color: AppColors.sky),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    '${statusLabel(course.status)} • Prioritas ${course.credits}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: AppColors.sky, fontSize: 12),
-                  ),
-                ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

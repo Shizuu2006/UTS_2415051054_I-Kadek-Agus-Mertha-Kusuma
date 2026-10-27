@@ -10,17 +10,24 @@ import '../widgets/error_view.dart';
 import '../widgets/highlight_card.dart';
 import 'course_detail_page.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   final VoidCallback onSeeAll;
   const HomePage({super.key, required this.onSeeAll});
 
-  void _open(BuildContext context, Course c) => Navigator.push(
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  String? _filter;
+
+  void _open(Course c) => Navigator.push(
     context,
     MaterialPageRoute(builder: (_) => CourseDetailPage(course: c)),
   );
 
   Widget _title(String text, {Widget? trailing}) => Padding(
-    padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+    padding: const EdgeInsets.fromLTRB(20, 22, 20, 10),
     child: Row(
       children: [
         Expanded(
@@ -39,7 +46,7 @@ class HomePage extends StatelessWidget {
   );
 
   Widget _header() => Padding(
-    padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+    padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
     child: Row(
       children: [
         Expanded(
@@ -55,13 +62,13 @@ class HomePage extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 26,
                   fontWeight: FontWeight.bold,
                   color: AppColors.navy,
                 ),
               ),
               Text(
-                'NIM $studentNim • TugasKu',
+                'NIM $studentNim • $studentClass',
                 style: TextStyle(
                   fontSize: 12,
                   color: AppColors.navy.withValues(alpha: 0.6),
@@ -71,7 +78,7 @@ class HomePage extends StatelessWidget {
           ),
         ),
         const CircleAvatar(
-          radius: 24,
+          radius: 26,
           backgroundColor: AppColors.ice,
           child: Icon(Icons.person, color: AppColors.blue),
         ),
@@ -79,11 +86,72 @@ class HomePage extends StatelessWidget {
     ),
   );
 
+  Widget _searchRow() => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 20),
+    child: Row(
+      children: [
+        Expanded(
+          child: TextField(
+            readOnly: true,
+            onTap: widget.onSeeAll,
+            decoration: const InputDecoration(
+              hintText: 'Cari tugas atau Nama Mata Kuliah',
+              suffixIcon: Icon(Icons.search, color: AppColors.blue),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: widget.onSeeAll,
+          child: Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: AppColors.ice,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(Icons.tune, color: AppColors.blue),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _chips() {
+    final options = <String?>[null, 'active', 'done'];
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      child: Row(
+        children: options
+            .map(
+              (s) => Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  label: Text(s == null ? 'Semua' : statusLabel(s)),
+                  selected: _filter == s,
+                  selectedColor: AppColors.blue,
+                  backgroundColor: AppColors.ice,
+                  side: BorderSide.none,
+                  showCheckmark: false,
+                  labelStyle: TextStyle(
+                    color: _filter == s ? Colors.white : AppColors.navy,
+                  ),
+                  onSelected: (_) => setState(() => _filter = s),
+                ),
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final p = context.watch<CourseProvider>();
 
-    final children = <Widget>[_header()];
+    final children = <Widget>[_header(), _searchRow(), _chips()];
 
     if (p.isLoading) {
       children.add(
@@ -109,68 +177,67 @@ class HomePage extends StatelessWidget {
         ),
       );
     } else {
-      final total = p.courses.length;
-      final active = p.courses.where((c) => c.status == 'active').length;
-      final done = p.courses.where((c) => c.status == 'done').length;
+      final base = p.courses
+          .where(
+            (c) => _filter == null ? c.status != 'done' : c.status == _filter,
+          )
+          .toList();
 
-      final highlights = p.courses.where((c) => c.status != 'done').toList()
+      final highlights = [...base]
         ..sort((a, b) => b.credits.compareTo(a.credits));
 
-      final upcoming =
-          p.courses
-              .where((c) => c.status != 'done' && c.deadline != null)
-              .toList()
-            ..sort((a, b) => a.deadline!.compareTo(b.deadline!));
+      final upcoming = base.where((c) => c.deadline != null).toList()
+        ..sort((a, b) => a.deadline!.compareTo(b.deadline!));
 
-      children.addAll([
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-          child: Row(
-            children: [
-              _Stat('Total', total, Icons.list_alt),
-              _Stat('Aktif', active, Icons.pending_actions),
-              _Stat('Selesai', done, Icons.check_circle_outline),
-            ],
+      children.add(_title('Prioritas Utama'));
+      if (highlights.isEmpty) {
+        children.add(
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Text('Tidak ada tugas pada filter ini.'),
           ),
-        ),
-        if (highlights.isNotEmpty) ...[
-          _title('Prioritas Utama'),
+        );
+      } else {
+        children.add(
           SizedBox(
-            height: 150,
-            child: ListView(
+            height: 190,
+            child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.only(left: 20),
-              children: highlights
-                  .take(5)
-                  .map(
-                    (c) => HighlightCard(
-                      course: c,
-                      onTap: () => _open(context, c),
-                    ),
-                  )
-                  .toList(),
+              itemCount: highlights.length > 5 ? 5 : highlights.length,
+              itemBuilder: (_, i) => HighlightCard(
+                course: highlights[i],
+                alt: i.isOdd,
+                onTap: () => _open(highlights[i]),
+              ),
             ),
           ),
-        ],
+        );
+      }
+
+      children.add(
         _title(
           'Deadline Terdekat',
           trailing: TextButton(
-            onPressed: onSeeAll,
+            onPressed: widget.onSeeAll,
             child: const Text('Lihat semua'),
           ),
         ),
-        if (upcoming.isEmpty)
+      );
+      if (upcoming.isEmpty) {
+        children.add(
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 20),
             child: Text('Belum ada tugas dengan deadline.'),
-          )
-        else
-          ...upcoming
+          ),
+        );
+      } else {
+        children.addAll(
+          upcoming
               .take(3)
-              .map(
-                (c) => CourseCard(course: c, onTap: () => _open(context, c)),
-              ),
-      ]);
+              .map((c) => CourseCard(course: c, onTap: () => _open(c))),
+        );
+      }
     }
 
     return RefreshIndicator(
@@ -182,44 +249,4 @@ class HomePage extends StatelessWidget {
       ),
     );
   }
-}
-
-class _Stat extends StatelessWidget {
-  final String label;
-  final int value;
-  final IconData icon;
-  const _Stat(this.label, this.value, this.icon);
-
-  @override
-  Widget build(BuildContext context) => Expanded(
-    child: Container(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      decoration: BoxDecoration(
-        color: AppColors.ice.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: AppColors.blue),
-          const SizedBox(height: 4),
-          Text(
-            '$value',
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppColors.navy,
-            ),
-          ),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: AppColors.navy.withValues(alpha: 0.6),
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
 }
