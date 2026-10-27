@@ -8,7 +8,6 @@ import '../theme.dart';
 import '../widgets/course_card.dart';
 import '../widgets/error_view.dart';
 import '../widgets/highlight_card.dart';
-import '../widgets/quote_section.dart';
 import 'course_detail_page.dart';
 
 class HomePage extends StatelessWidget {
@@ -84,7 +83,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.watch<CourseProvider>();
 
-    final children = <Widget>[_header(), const QuoteSection()];
+    final children = <Widget>[_header()];
 
     if (p.isLoading) {
       children.add(
